@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\projects\\aurastore-backend\\logs\\.fa7825b4dec3a217dc59518bf8c36689298deeb9-audit.json",
+    "files": [
+        {
+            "date": 1776666976670,
+            "name": "C:\\projects\\aurastore-backend\\logs\\app-2026-04-20.log",
+            "hash": "af9f20ca8a7ea9f5d5aa00bcac2345966dff6b220ac7e6cd1949f87f5b2a7c3b"
+        }
+    ],
+    "hashType": "sha256"
+}
