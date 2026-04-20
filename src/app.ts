@@ -6,10 +6,10 @@ import express, {
 import cors from 'cors';
 import httpStatus from 'http-status';
 import cookieParser from 'cookie-parser';
-import { requestLogger } from './middlewares/requestLogger.js';
 import notFound from './middlewares/notFound.js';
 import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
 import path from 'path';
+import { SystemHealthService } from './utils/advancedSystemHealth.js';
 
 const app: Application = express();
 
@@ -18,7 +18,6 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-app.use(requestLogger);
 app.use(express.static(path.join(process.cwd(), 'public')));
 
 // Routes
@@ -27,12 +26,8 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.get('/api/health', (req: Request, res: Response) => {
-  res.status(httpStatus.OK).json({
-    success: true,
-    status: 'healthy',
-    uptime: process.uptime(),
-    timestamp: new Date().toLocaleString(),
-  });
+  const healthData = SystemHealthService.getSystemHealth();
+  res.status(200).json(healthData);
 });
 
 app.get('/api/test', (req: Request, res: Response) => {

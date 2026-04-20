@@ -7,6 +7,7 @@ const env = {
   app: {
     nodeEnv: process.env.NODE_ENV || 'development',
     port: Number(process.env.PORT) || 5000,
+    vercel: process.env.VERCEL,
   },
 
   db: {

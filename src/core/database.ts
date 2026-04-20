@@ -1,61 +1,56 @@
 import mongoose from 'mongoose';
-import logger from '../utils/logger.js';
 import env from '../config/index.js';
 
-let isConnected = false;
+type MongooseCache = {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+};
 
-export const connectDB = async (): Promise<void> => {
-  if (isConnected) {
-    logger.info('Using existing database connection');
-    return;
+// 👇 Safe global typing
+const globalWithMongoose = globalThis as unknown as {
+  mongoose: MongooseCache;
+};
+
+// Initialize cache
+if (!globalWithMongoose.mongoose) {
+  globalWithMongoose.mongoose = {
+    conn: null,
+    promise: null,
+  };
+}
+
+export const connectDB = async (): Promise<typeof mongoose> => {
+  const cache = globalWithMongoose.mongoose;
+
+  if (cache.conn) {
+    return cache.conn;
   }
 
-  try {
-    const mongoUri = env.db.url;
+  if (!env.db?.url) {
+    throw new Error('DATABASE_URL is not defined');
+  }
 
-    console.log(mongoUri);
-
-    if (!mongoUri) {
-      logger.error('MONGODB_URI is not defined in environment variables');
-      throw new Error('MONGODB_URI is not defined in environment variables');
-    }
-
-    const opts = {
+  if (!cache.promise) {
+    cache.promise = mongoose.connect(env.db.url, {
       bufferCommands: false,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    };
-
-    await mongoose.connect(mongoUri, opts);
-
-    isConnected = true;
-
-    logger.info('MongoDB Connected Successfully 🚀');
-
-    mongoose.connection.on('error', (error) => {
-      logger.error('MongoDB connection error', error);
-      isConnected = false;
+      dbName: 'Business',
     });
-
-    mongoose.connection.on('disconnected', () => {
-      logger.warn('MongoDB disconnected ⚠️');
-      isConnected = false;
-    });
-  } catch (error) {
-    logger.error('MongoDB connection failed', error as Error);
-    throw error;
   }
-};
 
-// Helper function to check connection status
-export const getConnectionStatus = () => isConnected;
+  try {
+    cache.conn = await cache.promise;
 
-// Helper function to close connection (useful for testing)
-export const closeConnection = async () => {
-  if (isConnected) {
-    await mongoose.disconnect();
-    isConnected = false;
-    logger.info('MongoDB disconnected');
+    console.info('MongoDB Connected 🚀');
+
+    return cache.conn;
+  } catch (err) {
+    // 🔥 reset cache on failure (important for cold start retries)
+    cache.promise = null;
+
+    console.error('MongoDB connection failed', err);
+
+    throw err;
   }
 };

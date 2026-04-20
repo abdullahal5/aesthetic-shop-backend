@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
 import AppError from '../utils/AppError.js';
-import logger from '../utils/logger.js';
 
 export const globalErrorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,7 +19,7 @@ export const globalErrorHandler = (
   }
 
   // 📊 Log everything
-  logger.error(message, {
+  console.error(message, {
     stack: err.stack,
     path: req.path,
     method: req.method,
