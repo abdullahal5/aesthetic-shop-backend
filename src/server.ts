@@ -3,6 +3,7 @@ import app from './app.js';
 import env from './config/index.js';
 import { connectDB } from './core/database.js';
 import mongoose from 'mongoose';
+import { createSuperAdminIfNotExists } from './modules/admin/admin.service.js';
 
 let server: Server;
 
@@ -44,6 +45,9 @@ const init = async () => {
   try {
     // 🔥 DB connect (safe cached version assumed)
     await connectDB();
+
+    // 👑 Create super admin if not exists (ADD THIS LINE)
+    await createSuperAdminIfNotExists();
 
     // 🚫 Only run server locally
     const isVercel = process.env.VERCEL === '1';

@@ -16,21 +16,20 @@ const env = {
 
   auth: {
     bcryptSaltRounds: Number(process.env.BCRYPT_SALT_ROUNDS) || 10,
-
-    defaultPassword: process.env.DEFAULT_PASS as string,
-
     jwt: {
       accessSecret: process.env.JWT_ACCESS_SECRET as string,
       refreshSecret: process.env.JWT_REFRESH_SECRET as string,
-
       accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
       refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+    },
+    admin: {
+      username: process.env.ADMIN_USERNAME as string,
+      password: process.env.ADMIN_PASSWORD as string,
     },
   },
 
   security: {
     resetPasswordUiLink: process.env.RESET_PASS_UI_LINK as string,
-    superAdminPassword: process.env.SUPER_ADMIN_PASSWORD as string,
   },
 
   cloudinary: {
