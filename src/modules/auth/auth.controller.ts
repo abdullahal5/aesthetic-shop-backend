@@ -10,6 +10,13 @@ export class AuthController {
   static login = catchAsync(async (req: Request, res: Response) => {
     const result = await AuthService.login(req.body);
 
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -20,7 +27,9 @@ export class AuthController {
 
   // Refresh token controller
   static refreshToken = catchAsync(async (req: Request, res: Response) => {
-    const { refreshToken } = req.body;
+    const { refreshToken } = req.cookies;
+
+    console.log('cookies refresh token', refreshToken)
 
     const result = await AuthService.refreshToken(refreshToken);
 

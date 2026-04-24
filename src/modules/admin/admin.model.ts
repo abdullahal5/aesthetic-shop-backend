@@ -1,3 +1,4 @@
+// admin.model.ts
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import type { IAdmin } from './admin.types.js';
@@ -28,47 +29,27 @@ const adminSchema = new mongoose.Schema<IAdmin>(
       type: Date,
     },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
-// Hash password before saving - Using async/await (RECOMMENDED)
-adminSchema.pre('save', async function (next) {
-  const admin = this as IAdmin;
+adminSchema.pre('save', async function () {
+  if (!this.isModified('password')) return;
 
-  if (!admin.isModified('password')) {
-    return next();
-  }
+  if (!this.password) throw new Error('Password is required');
 
-  try {
-    const password = admin.password;
-    if (!password) {
-      throw new Error('Password is required');
-    }
-
-    const salt = await bcrypt.genSalt(12);
-    admin.password = await bcrypt.hash(password, salt);
-    next();
-  } catch (error: any) {
-    next(error);
-  }
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Compare password method
 adminSchema.methods.comparePassword = async function (
-  this: IAdmin,
   candidatePassword: string,
 ): Promise<boolean> {
-  if (!this.password) {
-    return false;
-  }
+  if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Remove password from JSON response
 adminSchema.set('toJSON', {
-  transform: (doc, ret: any) => {
+  transform: (_doc, ret: any) => {
     delete ret.password;
     delete ret.__v;
     return ret;

@@ -5,7 +5,10 @@ import { Types } from 'mongoose';
 // Create super admin if not exists
 export const createSuperAdminIfNotExists = async (): Promise<void> => {
   try {
-    const superAdminExists = await Admin.findOne({ role: 'super-admin' });
+    const superAdminExists = await Admin.findOne({
+      username: env.auth.admin.username,
+      role: env.auth.admin.password,
+    });
 
     if (!superAdminExists) {
       const adminUsername = env.auth.admin.username;

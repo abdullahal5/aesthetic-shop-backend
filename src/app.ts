@@ -10,11 +10,17 @@ import notFound from './middlewares/notFound.js';
 import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
 import path from 'path';
 import { SystemHealthService } from './utils/advancedSystemHealth.js';
+import router from './routes/index.js';
 
 const app: Application = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
@@ -24,6 +30,8 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 app.get('/', (req: Request, res: Response) => {
   res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
+
+app.use('/api', router);
 
 app.get('/api/health', (req: Request, res: Response) => {
   const healthData = SystemHealthService.getSystemHealth();
