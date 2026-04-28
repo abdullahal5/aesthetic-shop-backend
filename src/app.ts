@@ -11,6 +11,7 @@ import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
 import path from 'path';
 import { SystemHealthService } from './utils/advancedSystemHealth.js';
 import router from './routes/index.js';
+import { connectDB } from './core/database.js';
 
 const app: Application = express();
 
@@ -28,6 +29,15 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), 'public')));
+
+app.use(async (_req, _res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
