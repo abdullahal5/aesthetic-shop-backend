@@ -4,6 +4,7 @@ import env from './config/index.js';
 import { connectDB } from './core/database.js';
 import mongoose from 'mongoose';
 import { createSuperAdminIfNotExists } from './modules/admin/admin.service.js';
+import { seedAll } from './seed/seed.js';
 
 let server: Server;
 
@@ -45,6 +46,8 @@ const init = async () => {
   try {
     // 🔥 DB connect (safe cached version assumed)
     await connectDB();
+
+    await seedAll();
 
     // 👑 Create super admin if not exists (ADD THIS LINE)
     await createSuperAdminIfNotExists();
