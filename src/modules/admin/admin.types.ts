@@ -1,5 +1,5 @@
 
-export interface IAdmin extends Document {
+export interface IAdmin {
   username: string;
   password: string;
   role: 'super-admin' | 'admin';

@@ -1,0 +1,85 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: aurastore-mongodb
+    restart: unless-stopped
+
+    ports:
+      - "27017:27017"
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password123}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-aurastore}
+
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+    networks:
+      - aurastore-network
+
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+
+    container_name: aurastore-app
+    restart: unless-stopped
+
+    ports:
+      - "5000:5000"
+
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+
+      # IMPORTANT FIX: use internal mongo service auth properly
+      MONGODB_URL: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-password123}@mongodb:27017/${MONGO_DB:-aurastore}?authSource=admin
+
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+    networks:
+      - aurastore-network
+
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+
+    # 🔥 IMPORTANT: ensures app waits for Mongo properly
+    command: sh -c "node dist/server.js"
+
+
+volumes:
+  mongodb_data:
+    driver: local
+
+
+networks:
+  aurastore-network:
+    driver: bridge
